@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Windows.Forms;
+using System.IO;
 using Tsm;
 
 namespace TsmXiL
@@ -9,8 +9,8 @@ namespace TsmXiL
         private ITsmApplication Tsm { get; set; }
         private CSensorEvents SensorEvents { get; set; }
         private CSimulationEvents SimulationEvents { get; set; }
-        private Logger Logger { get; set; }
-        public string LogFile => Logger?.LogFilePath;
+        private Logger Log { get; set; }
+        public string LogFile => Log?.LogFile;
         private double NextTime { get; set; }
 
         //This is the entry point of the plugin from TransModeler
@@ -20,34 +20,35 @@ namespace TsmXiL
             {
                 Tsm = new TsmApplication();
                 if (Tsm == null) return false;
+                var logFile = Path.Combine(Tsm.OutputFolder, "TsmXiL", "log.txt");
+                var dataFile = Path.Combine(Tsm.OutputFolder, "TsmXiL", "data.csv");
+                Log = new Logger(logFile, dataFile);
 
-                Logger = new Logger();
-
-                Logger.Log("Initiating TsmXiL Plugin...");
+                Log.Info("Initiating TsmXiL Plugin...");
 
                 if (!ConnectToTsm()) return false;
 
                 SubscribeToEvents();
 
-                Logger.Log("########## TsmXiL plugin initialized successfully! ##########");
+                Log.Info("########## TsmXiL plugin initialized successfully! ##########");
 
                 return true;
             }
             catch (Exception exception)
             {
                 Disconnect();
-                Logger.Error($"An error occurred while initializing the TsmXiL plugin.\nError: {exception.Message}");
+                Log.Error($"An error occurred while initializing the TsmXiL plugin.\nError: {exception.Message}");
                 throw;
             }
         }
 
         private bool ConnectToTsm()
         {
-            Logger.Log("Connecting to TransModeler...");
+            Log.Info("Connecting to TransModeler...");
             if (Tsm == null) return false;
             SensorEvents = new CSensorEvents(Tsm);
             SimulationEvents = new CSimulationEvents(Tsm);
-            Logger.Log("Connected to TransModeler!");
+            Log.Info("Connected to TransModeler!");
             return true;
         }
 
@@ -55,7 +56,7 @@ namespace TsmXiL
         {
             try
             {
-                Logger?.Log("Disconnecting TsmXiL plugin from Tsm...");
+                Log?.Info("Disconnecting TsmXiL plugin from Tsm...");
                 if (SimulationEvents != null)
                 {
                     SimulationEvents.OnSimulationStarted -= OnSimulationStarted;
@@ -67,25 +68,25 @@ namespace TsmXiL
 
                 SensorEvents?.Disconnect();
                 SensorEvents = null;
-                Logger?.Log("Disconnected!");
-                Logger?.Close();
-                Logger = null;
+                Log?.Info("Disconnected!");
+                Log?.Close();
+                Log = null;
                 if (Tsm != null) Tsm = null;
                 GC.Collect();
             }
             catch (Exception exception)
             {
-                Logger?.Error($"{exception.Message}\n{exception.StackTrace}");
+                Log?.Error($"{exception.Message}\n{exception.StackTrace}");
             }
         }
 
         private void SubscribeToEvents()
         {
-            Logger.Log("Subscribing to simulation events...");
+            Log.Info("Subscribing to simulation events...");
             SimulationEvents.OnSimulationStarted += OnSimulationStarted;
             SimulationEvents.OnAdvance += OnSimulationAdvance;
             SimulationEvents.OnSimulationStopped += OnSimulationStopped;
-            Logger.Log("Subscribed to simulation events!");
+            Log.Info("Subscribed to simulation events!");
         }
 
         private void OnSimulationStopped(TsmState e)
@@ -96,7 +97,7 @@ namespace TsmXiL
         private void OnSimulationStarted()
         {
             NextTime = Tsm.StartTime;
-            MessageBox.Show("Hello, from the TsmXiL plugin!");
+            Log.Info("Hello, from the TsmXiL plugin!");
         }
 
         private double OnSimulationAdvance(double time)
@@ -111,7 +112,7 @@ namespace TsmXiL
             {
                 var message = "An error occurred in the OnSimulationAdvance method of the TsmXiL plugin. \n" +
                               $"Error message: {e.Message}";
-                Logger.Error($"{message}\nError Source: {e.StackTrace}");
+                Log.Error($"{message}\nError Source: {e.StackTrace}");
                 Tsm.LogErrorMessage("[TsmXiL]" + message);
                 return double.MaxValue;
             }

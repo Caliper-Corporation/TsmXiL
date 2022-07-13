@@ -9,26 +9,25 @@ namespace TsmXiL
     {
         private readonly ReaderWriterLock _locker = new ReaderWriterLock();
 
-        public Logger(string logFilePath = null, Stopwatch stopwatch = null)
+        public Logger(string logFile, string dataFile = null)
         {
-            LogFilePath = !string.IsNullOrEmpty(logFilePath) ? logFilePath : "log.txt";
-            Watch = stopwatch;
+            LogFile = !string.IsNullOrEmpty(logFile) ? logFile : "log.txt";
+            DataFile = !string.IsNullOrEmpty(dataFile) ? dataFile : "data.csv";
         }
 
-        public string LogFilePath { get; private set; }
-        private Stopwatch Watch { get; }
+        public string LogFile { get; private set; }
+        public string DataFile { get; }
 
-        public void Log(string msg, string type = Constants.INFO)
+        public void Info(string msg, string type = Constants.INFO)
         {
             var now = DateTime.Now.ToString("G");
-            var time = Watch == null || !Watch.IsRunning ? string.Empty : $"({Watch.ElapsedMilliseconds} ms)";
-            msg = $"[{now}][{type}] {msg} {time}";
+            msg = $"[{now}][{type}] {msg}";
             if (Debugger.IsAttached) Console.WriteLine(msg);
 
             try
             {
                 _locker.AcquireWriterLock(5000);
-                File.AppendAllLines(LogFilePath, new[] { msg });
+                File.AppendAllLines(LogFile, new[] { msg });
             }
             finally
             {
@@ -38,12 +37,27 @@ namespace TsmXiL
 
         public void Error(string msg)
         {
-            Log(msg, Constants.ERROR);
+            Info(msg, Constants.ERROR);
+        }
+
+        public void Data(string data)
+        {
+            if (string.IsNullOrEmpty(DataFile))
+                throw new Exception("Data file is required and has not been specified.");
+            try
+            {
+                File.AppendAllLines(DataFile, new[] { data });
+            }
+            catch (Exception exception)
+            {
+                Error(exception.Message);
+                throw;
+            }
         }
 
         internal void Close()
         {
-            LogFilePath = null;
+            LogFile = null;
         }
     }
 
