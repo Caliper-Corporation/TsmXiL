@@ -1,0 +1,2 @@
+﻿TCP_Address: 127.0.0.1
+TCP_Port: 8080
