@@ -69,6 +69,6 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(TargetDir) c:\temp\TsmXiL\</PostBuildEvent>
+    <PostBuildEvent>xcopy $(TargetDir) c:\temp\TsmXiL\ /s /y</PostBuildEvent>
   </PropertyGroup>
 </Project>
