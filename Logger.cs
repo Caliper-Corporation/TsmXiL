@@ -16,7 +16,7 @@ namespace TsmXiL
         }
 
         public string LogFile { get; private set; }
-        public string DataFile { get; }
+        private string DataFile { get; }
 
         public void Info(string msg, string type = Constants.INFO)
         {
@@ -43,7 +43,10 @@ namespace TsmXiL
         public void Data(string data)
         {
             if (string.IsNullOrEmpty(DataFile))
+            {
                 throw new Exception("Data file is required and has not been specified.");
+            }
+            
             try
             {
                 File.AppendAllLines(DataFile, new[] { data });

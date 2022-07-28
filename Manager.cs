@@ -9,6 +9,7 @@ namespace TsmXiL
         private ITsmApplication Tsm { get; set; }
         private CSensorEvents SensorEvents { get; set; }
         private CSimulationEvents SimulationEvents { get; set; }
+        private Controller Controller { get; set; }
         private Logger Log { get; set; }
         public string LogFile => Log?.LogFile;
         private double NextTime { get; set; }
@@ -23,7 +24,7 @@ namespace TsmXiL
                 var logFile = Path.Combine(Tsm.OutputFolder, "TsmXiL", "log.txt");
                 var dataFile = Path.Combine(Tsm.OutputFolder, "TsmXiL", "data.csv");
                 Log = new Logger(logFile, dataFile);
-
+                Controller = new Controller(Tsm, Log);
                 Log.Info("Initiating TsmXiL Plugin...");
 
                 if (!ConnectToTsm()) return false;
@@ -104,8 +105,8 @@ namespace TsmXiL
         {
             try
             {
-                if (time >= NextTime) NextTime = time + 1;
-
+                if (time >= NextTime) NextTime = time + 0.1; // call every 10th of a second
+                Controller.Update(time);
                 return NextTime;
             }
             catch (Exception e)
