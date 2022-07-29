@@ -1,45 +1,40 @@
-﻿using ProtoBuf;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using System.Net.Sockets;
 using Tsm;
 
 namespace TsmXiL
 {
-    internal class Controller
+    public class Controller
     {
         private ITsmApplication Tsm { get; set; }
         private Logger Log { get; set; }
+        private TcpClient Client { get; set; }
 
         public Controller(ITsmApplication tsm, Logger logger)
         {
             Tsm = tsm;
             Log = logger;
+            string serverIp = null;
+            Utils.GetConfigValues("config.txt", ref serverIp, out int port, logger);
+            Client = Utils.GetTcpClient(serverIp, port, logger);
         }
 
         public void Update(double time)
         {
-            SendData(null);
-            ReceiveData();
-            UpdateSimulationVehicle();
-            var simTime = Tsm.TimeToString(time);
+            var res = SendAccelCommand();
+            UpdateSimulationVehicle(res);
+            var simTime = Tsm?.TimeToString(time);
+            simTime = string.IsNullOrEmpty(simTime) ? DateTime.Now.ToString("G") : simTime;
             Log.Data(simTime);
         }
 
-        private void SendData(object leaderData)
+        public Response SendAccelCommand()
         {
-
-        }
-
-        private object ReceiveData()
-        {
+            //send acceleration command and get back a response
             return null;
         }
 
-        private bool UpdateSimulationVehicle()
+        public bool UpdateSimulationVehicle(Response res)
         {
             return false;
         }

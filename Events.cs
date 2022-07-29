@@ -127,7 +127,11 @@ namespace TsmXiL
 
         public virtual double Advance(double dTime)
         {
-            if (OnAdvance != null) return OnAdvance(dTime);
+            if (OnAdvance != null)
+            {
+                return OnAdvance(dTime);
+            }
+
             return double.MaxValue;
         }
 

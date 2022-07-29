@@ -1,2 +1,2 @@
-﻿TCP_Address: 127.0.0.1
-TCP_Port: 8080
+﻿Address: 127.0.0.1
+Port: 8080

@@ -20,14 +20,21 @@ namespace TsmXiL
             try
             {
                 Tsm = new TsmApplication();
-                if (Tsm == null) return false;
+                if (Tsm == null)
+                {
+                    return false;
+                }
+
                 var logFile = Path.Combine(Tsm.OutputFolder, "TsmXiL", "log.txt");
                 var dataFile = Path.Combine(Tsm.OutputFolder, "TsmXiL", "data.csv");
                 Log = new Logger(logFile, dataFile);
                 Controller = new Controller(Tsm, Log);
                 Log.Info("Initiating TsmXiL Plugin...");
 
-                if (!ConnectToTsm()) return false;
+                if (!ConnectToTsm())
+                {
+                    return false;
+                }
 
                 SubscribeToEvents();
 
@@ -46,7 +53,11 @@ namespace TsmXiL
         private bool ConnectToTsm()
         {
             Log.Info("Connecting to TransModeler...");
-            if (Tsm == null) return false;
+            if (Tsm == null)
+            {
+                return false;
+            }
+
             SensorEvents = new CSensorEvents(Tsm);
             SimulationEvents = new CSimulationEvents(Tsm);
             Log.Info("Connected to TransModeler!");
@@ -72,7 +83,11 @@ namespace TsmXiL
                 Log?.Info("Disconnected!");
                 Log?.Close();
                 Log = null;
-                if (Tsm != null) Tsm = null;
+                if (Tsm != null)
+                {
+                    Tsm = null;
+                }
+
                 GC.Collect();
             }
             catch (Exception exception)
@@ -105,7 +120,11 @@ namespace TsmXiL
         {
             try
             {
-                if (time >= NextTime) NextTime = time + 0.1; // call every 10th of a second
+                if (time >= NextTime)
+                {
+                    NextTime = time + 0.1; // call every 10th of a second
+                }
+
                 Controller.Update(time);
                 return NextTime;
             }

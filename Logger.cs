@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace TsmXiL
 {
-    internal class Logger
+    public class Logger
     {
         private readonly ReaderWriterLock _locker = new ReaderWriterLock();
 
@@ -22,7 +22,10 @@ namespace TsmXiL
         {
             var now = DateTime.Now.ToString("G");
             msg = $"[{now}][{type}] {msg}";
-            if (Debugger.IsAttached) Console.WriteLine(msg);
+            if (Debugger.IsAttached)
+            {
+                Console.WriteLine(msg);
+            }
 
             try
             {
@@ -46,7 +49,7 @@ namespace TsmXiL
             {
                 throw new Exception("Data file is required and has not been specified.");
             }
-            
+
             try
             {
                 File.AppendAllLines(DataFile, new[] { data });
