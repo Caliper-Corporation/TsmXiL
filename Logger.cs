@@ -21,12 +21,12 @@ namespace TsmXiL
 
         public void Info(string msg, string type = Constants.INFO)
         {
-            Task.Run(() => WriteToLogFile(msg, type));
+            WriteToLogFile(msg, type);
         }
 
         private void WriteToLogFile(string msg, string type)
         {
-            var now = DateTime.Now.ToString("HH:mm:ss.ff");
+            var now = DateTime.Now.ToString("HH:mm:ss");
             var logType = type == Constants.INFO ? string.Empty : $"[{type}]";
             msg = $"[{now}]{logType} {msg}";
             if (Debugger.IsAttached)
@@ -34,15 +34,7 @@ namespace TsmXiL
                 Console.WriteLine(msg);
             }
 
-            try
-            {
-                _locker.AcquireWriterLock(1000);
-                File.AppendAllLines(LogFile, new[] { msg });
-            }
-            finally
-            {
-                _locker.ReleaseWriterLock();
-            }
+            File.AppendAllLines(LogFile, new[] { msg });
         }
 
         public void Error(string msg)
