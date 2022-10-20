@@ -16,19 +16,22 @@ namespace TsmXiL
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine(e.Message);
                     log?.Error(e.Message);
                 }
             }
             else
             {
-                log?.Error("Unable to initialize TCP client from controller. Missing or incorrect server or port in config file.");
+                var msg = "Unable to initialize TCP client from controller. Missing or incorrect server or port in config file.";
+                Console.WriteLine(msg);
+                log?.Error(msg);
             }
             return null;
         }
 
-        public static void GetConfigValues(string configFile, ref string serverIp, out int port, Logger log = null)
+        public static ConfigOptions GetConfigValues(string configFile, Logger log = null)
         {
-            port = 0;
+            var config = new ConfigOptions();
             try
             {
                 var lines = File.ReadAllLines(configFile);
@@ -39,15 +42,27 @@ namespace TsmXiL
                     {
                         var key = values[0].ToLower().Trim();
                         var val = values[1].Trim();
-                        if (key.Contains("address")) { serverIp = val; }
-                        else if (key.Contains("port")) { port = int.Parse(val); }
+                        if (key.Contains("address")) { config.ServerIp = val; }
+                        else if (key.Contains("port")) { config.Port = int.Parse(val); }
+                        else if (key.Contains("interval")) { config.Interval = int.Parse(val); }
+                        else if (key.Contains("acceleration")) { config.Acceleration = double.Parse(val); }
                     }
                 }
             }
             catch (Exception e)
             {
+                Console.WriteLine(e.Message);
                 log?.Error(e.Message);
             }
+            return config;
         }
+    }
+
+    public class ConfigOptions
+    {
+        public string ServerIp { get; set; }
+        public int Port { get; set; }
+        public int Interval { get; set; }
+        public double Acceleration { get; set; }
     }
 }

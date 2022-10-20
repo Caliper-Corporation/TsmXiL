@@ -14,9 +14,9 @@ namespace TsmXiL
         {
             Tsm = tsm;
             Log = logger;
-            string serverIp = null;
-            Utils.GetConfigValues("config.txt", ref serverIp, out int port, logger);
-            Client = Utils.GetTcpClient(serverIp, port, logger);
+            
+            var config = Utils.GetConfigValues("config.txt", logger);
+            Client = Utils.GetTcpClient(config.ServerIp, config.Port, logger);
         }
 
         public void Update(double time)

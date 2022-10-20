@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace TsmXiL
 {
@@ -20,8 +21,14 @@ namespace TsmXiL
 
         public void Info(string msg, string type = Constants.INFO)
         {
-            var now = DateTime.Now.ToString("G");
-            msg = $"[{now}][{type}] {msg}";
+            Task.Run(() => WriteToLogFile(msg, type));
+        }
+
+        private void WriteToLogFile(string msg, string type)
+        {
+            var now = DateTime.Now.ToString("HH:mm:ss.ff");
+            var logType = type == Constants.INFO ? string.Empty : $"[{type}]";
+            msg = $"[{now}]{logType} {msg}";
             if (Debugger.IsAttached)
             {
                 Console.WriteLine(msg);
@@ -29,7 +36,7 @@ namespace TsmXiL
 
             try
             {
-                _locker.AcquireWriterLock(5000);
+                _locker.AcquireWriterLock(1000);
                 File.AppendAllLines(LogFile, new[] { msg });
             }
             finally
