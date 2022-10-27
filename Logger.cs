@@ -39,7 +39,7 @@ namespace TsmXiL
 
         public void Error(string msg)
         {
-            Info(msg, Constants.ERROR);
+            WriteToLogFile(msg, Constants.ERROR);
         }
 
         public void Data(string data)
