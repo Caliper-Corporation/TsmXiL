@@ -7,15 +7,5 @@ namespace TsmXiL
     {
         public double Acceleration { get; set; }
         public double Speed { get; set; }
-
-        public static Response GetResponseFromByteArray(byte[] bytes)
-        {
-            var bf = new BinaryFormatter();
-            using (var m = new MemoryStream(bytes))
-            {
-                var obj = bf.Deserialize(m);
-                return (Response) obj;
-            }
-        }
     }
 }
