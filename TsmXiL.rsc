@@ -27,3 +27,4 @@ Macro "DisconnectTsmXiLPlugin"
     gc = GetManagedClass(, "System.GC",)
     gc.Collect()
 endMacro
+
