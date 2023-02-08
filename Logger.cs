@@ -8,8 +8,6 @@ namespace TsmXiL
 {
     public class Logger
     {
-        private readonly ReaderWriterLock _locker = new ReaderWriterLock();
-
         public Logger(string logFile, string dataFile = null)
         {
             LogFile = !string.IsNullOrEmpty(logFile) ? logFile : "log.txt";

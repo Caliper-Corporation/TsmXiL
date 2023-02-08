@@ -220,4 +220,95 @@ namespace TsmXiL
         public event NewSignalStateEventHandler OnNewSignalState = delegate { };
         public event StartPlanEventHandler OnStartPlan = delegate { };
     }
+
+    internal class CVehicleEvents : CTsmEvents<_IVehicleEvents>, _IVehicleEvents
+    {
+        public CVehicleEvents(ITsmApplication tsm) : base(tsm)
+        {
+        }
+
+        public void Departure(int idVehicle, double dTime)
+        {
+            
+        }
+
+        public void Parked(int idVehicle, double dTime)
+        {
+            
+        }
+
+        public void Stalled(int idVehicle, double dTime, bool bStalled)
+        {
+            
+        }
+
+        public void Arrival(int idVehicle, double dTime)
+        {
+            OnArrive?.Invoke(idVehicle, dTime);
+        }
+
+        public void NewLane(TsmVehicle pVehicle, int idLane, double dTime)
+        {
+            
+        }
+
+        public void NewSegment(TsmVehicle pVehicle, int idSegment, double dTime)
+        {
+            
+        }
+
+        public void NewLink(TsmVehicle pVehicle, int idLink, double dTime)
+        {
+            
+        }
+
+        public void NewPath(TsmVehicle pVehicle, int idPath, int iPosition, double dTime)
+        {
+            
+        }
+
+        public float TransitStop(double dTime, TsmVehicle pVehicle, TsmRoute pRoute, TsmStop pStop, short nMaxCapacity,
+            short nPassengers, float fSchedDev, float fDwellTime)
+        {
+            return float.MinValue;
+        }
+
+        public float CarFollowingAcceleration(double dTime, TsmVehicle pVehicle, float fRate)
+        {
+            return float.MinValue;
+        }
+
+        public float Acceleration(double dTime, TsmVehicle pVehicle, float fRate)
+        {
+            return float.MinValue;
+        }
+
+        public short LaneChange(double dTime, TsmVehicle pVehicle, short iChange, ref bool pMandatory)
+        {
+            return short.MinValue;
+        }
+
+        public void AVL(TsmVehicle pVehicle, short iType, ref STsmCoord3 pLocation, double dTime)
+        {
+            
+        }
+
+        public float LinkCost(short iClass, short nOccupancy, short iGroup, uint lType, double dTime, TsmLink pFromLink, TsmLink pLink,
+            float fCostVal)
+        {
+            return float.MinValue;
+        }
+
+        public object GetProperty(TsmVehicle pVehicle, short iCol)
+        {
+            return null;
+        }
+
+        public void SetProperty(TsmVehicle pVehicle, short iCol, object newVal)
+        {
+
+        }
+
+        public event ArrivalEventHandler OnArrive;
+    }
 }

@@ -9,6 +9,7 @@ namespace TsmXiL
         private ITsmApplication Tsm { get; set; }
         private CSensorEvents SensorEvents { get; set; }
         private CSimulationEvents SimulationEvents { get; set; }
+        private CVehicleEvents VehicleEvents { get; set; }
         private Controller Controller { get; set; }
         private Logger Log { get; set; }
         public string LogFile => Log?.LogFile;
@@ -25,10 +26,10 @@ namespace TsmXiL
                     return false;
                 }
 
-                var logFile = Path.Combine(Tsm.OutputFolder, "TsmXiL", "log.txt");
-                var dataFile = Path.Combine(Tsm.OutputFolder, "TsmXiL", "data.csv");
+                var logFile = Path.Combine(Tsm.OutputFolder, "TsmXiL-log.txt");
+                var dataFile = Path.Combine(Tsm.OutputFolder, "TsmXiL-data.csv");
                 Log = new Logger(logFile, dataFile);
-                Controller = new Controller(Tsm, Log);
+                Controller = new Controller(Tsm, Log, configFile);
                 Log.Info("Initiating TsmXiL Plugin...");
 
                 if (!ConnectToTsm())
@@ -60,6 +61,7 @@ namespace TsmXiL
 
             SensorEvents = new CSensorEvents(Tsm);
             SimulationEvents = new CSimulationEvents(Tsm);
+            VehicleEvents = new CVehicleEvents(Tsm);
             Log.Info("Connected to TransModeler!");
             return true;
         }
@@ -78,8 +80,19 @@ namespace TsmXiL
                     SimulationEvents = null;
                 }
 
-                SensorEvents?.Disconnect();
-                SensorEvents = null;
+                if (SensorEvents != null)
+                {
+                    SensorEvents.Disconnect();
+                    SensorEvents = null;
+                }
+
+                if (VehicleEvents != null)
+                {
+                    VehicleEvents.OnArrive -= OnVehicleArrival;
+                    VehicleEvents.Disconnect();
+                    VehicleEvents = null;
+                }
+                Controller?.CleanUp();
                 Log?.Info("Disconnected!");
                 Log?.Close();
                 Log = null;
@@ -102,27 +115,41 @@ namespace TsmXiL
             SimulationEvents.OnSimulationStarted += OnSimulationStarted;
             SimulationEvents.OnAdvance += OnSimulationAdvance;
             SimulationEvents.OnSimulationStopped += OnSimulationStopped;
+            VehicleEvents.OnArrive += OnVehicleArrival;
             Log.Info("Subscribed to simulation events!");
+        }
+
+        private void OnVehicleArrival(int idvehicle, double dtime)
+        {
+            if (Controller.Vehicle != null && idvehicle == Controller.Vehicle.id)
+            {
+                Tsm.Pause(true);
+                Disconnect();
+            }
         }
 
         private void OnSimulationStopped(TsmState e)
         {
-            Disconnect();
+            Controller?.CleanUp();
         }
 
         private void OnSimulationStarted()
         {
             NextTime = Tsm.StartTime;
-            Log.Info("Hello, from the TsmXiL plugin!");
+            Controller?.Init();
         }
 
         private double OnSimulationAdvance(double time)
         {
             try
             {
+                if (Math.Abs(time - 59700) < 0.1)
+                {
+                    Controller.AddVehicle();
+                }
                 if (time >= NextTime)
                 {
-                    NextTime = time + 0.1; // call every 10th of a second
+                    NextTime = time + Controller.UpdateIntervalInSeconds;
                 }
 
                 Controller.Update(time);

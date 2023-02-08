@@ -1,5 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Net.Sockets;
+using System.Text;
+using System.Timers;
 using Tsm;
 
 namespace TsmXiL
@@ -8,35 +11,115 @@ namespace TsmXiL
     {
         private ITsmApplication Tsm { get; set; }
         private Logger Log { get; set; }
-        private TcpClient Client { get; set; }
+        public double UpdateIntervalInSeconds { get; set; }
 
-        public Controller(ITsmApplication tsm, Logger logger)
+        private ConfigOptions _config;
+        private TcpClient _client;
+        private static BinaryReader _reader;
+        private static NetworkStream _stream;
+        private string _simTime;
+        public ITsmVehicle Vehicle { get; set; }
+        private readonly string _configFile;
+        private string _dataLine;
+
+
+        public Controller(ITsmApplication tsm, Logger logger, string configFile)
         {
             Tsm = tsm;
             Log = logger;
-            
-            var config = Utils.GetConfigValues("config.txt", logger);
-            Client = Utils.GetTcpClient(config.ServerIp, config.Port, logger);
+            _configFile = configFile;
+        }
+
+        public void Init()
+        {
+            _config = Utils.GetConfigValues(_configFile, Log);
+            UpdateIntervalInSeconds = (double)_config.Interval / 1000;
+            _client = Utils.GetTcpClient(_config.ServerIp, _config.Port, Log);
+            _stream = _client?.GetStream();
+            if (_stream != null)
+            {
+                _reader = new BinaryReader(_stream, Encoding.Default, true);
+            }
+            Log.Data("Sim Time, Request Acceleration, Request Speed, Response Acceleration, Response Speed");
         }
 
         public void Update(double time)
         {
-            var res = SendAccelCommand();
-            UpdateSimulationVehicle(res);
-            var simTime = Tsm?.TimeToString(time);
-            simTime = string.IsNullOrEmpty(simTime) ? DateTime.Now.ToString("G") : simTime;
-            Log.Data(simTime);
+            _simTime = Tsm?.TimeToString(time);
+            _simTime = string.IsNullOrEmpty(_simTime) ? DateTime.Now.ToString("G") : _simTime;
+            _dataLine = $"{_simTime},";
+            UpdateRealVehicle();
+            UpdateSimulationVehicle();
+            if (Vehicle != null) Log.Data(_dataLine);
         }
 
-        public Response SendAccelCommand()
+        public void AddVehicle()
         {
-            //send acceleration command and get back a response
-            return null;
+            var opts = new TsmAttributes();
+            opts.Set("Speed", _config.InitialSpeed);
+            var ori = new STsmLocation
+            {
+                type = TsmLocationType.LOCATION_LINK,
+                id = _config.VehOriginLaneId
+            };
+            var des = new STsmLocation()
+            {
+                type = TsmLocationType.LOCATION_LINK,
+                id = _config.VehDestinationLaneId
+            };
+            Vehicle = Tsm.Network.AddVehicle(ref ori, ref des, opts);
+            if (Vehicle == null)
+            {
+                var msg = "Unable to add vehicle to network.";
+                Log.Error(msg);
+                throw new Exception(msg);
+            }
+            Vehicle.Track(true, true);
+            Log.Info($"Added new vehicle on lane {_config.VehOriginLaneId} with id {Vehicle.id} and turned on tracking");
+            Tsm.Pause(true);
         }
 
-        public bool UpdateSimulationVehicle(Response res)
+        private void UpdateRealVehicle()
         {
-            return false;
+            var req = new Request();
+            if (Vehicle != null && Vehicle.Leader != null)
+            {
+                req.Acceleration = Vehicle.Leader.Acceleration;
+                req.Speed = Vehicle.Leader.Speed;
+            }
+            else
+            {
+                req.Acceleration = _config.Acceleration;
+                req.Speed = _config.InitialSpeed;
+            }
+
+            _dataLine += $"{req.Acceleration:F2},{req.Speed:F2},";
+            var bytes = req.GetByteArray();
+            _stream?.Write(bytes, 0, bytes.Length);
+        }
+
+        private void UpdateSimulationVehicle()
+        {
+            if (_reader == null) return;
+            var res = new Response
+            {
+                Acceleration = _reader.ReadDouble(),
+                Speed = _reader.ReadDouble()
+            };
+            _dataLine += $"{res.Acceleration:F2},{res.Speed:F2}";
+            if (Vehicle != null)
+            {
+                Vehicle.Acceleration = (float)res.Acceleration;
+                Vehicle.Speed = (float)res.Speed;
+            }
+        }
+
+        public void CleanUp()
+        {
+            _reader?.Close();
+            _reader?.Dispose();
+            _stream?.Close();
+            _client?.Close();
         }
     }
 }

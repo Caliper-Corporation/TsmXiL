@@ -1,4 +1,7 @@
-﻿Address: 127.0.0.1
-Port: 8080
-Interval: 1000
-Acceleration: 10
+﻿TcpAddress: 127.0.0.1
+TcpPort: 8080
+UpdateInterval: 1000
+VehOriginLaneId : -222
+VehDestinationLaneId : -360
+VehInitialSpeed : 35
+DefaultAcceleration: 0

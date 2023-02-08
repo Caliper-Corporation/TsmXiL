@@ -46,6 +46,9 @@ namespace TsmXiL
                         else if (key.Contains("port")) { config.Port = int.Parse(val); }
                         else if (key.Contains("interval")) { config.Interval = int.Parse(val); }
                         else if (key.Contains("acceleration")) { config.Acceleration = double.Parse(val); }
+                        else if (key.Contains("origin")) { config.VehOriginLaneId = int.Parse(val); }
+                        else if (key.Contains("destination")) { config.VehDestinationLaneId = int.Parse(val); }
+                        else if (key.Contains("speed")) { config.InitialSpeed = float.Parse(val); }
                     }
                 }
             }
@@ -64,5 +67,9 @@ namespace TsmXiL
         public int Port { get; set; }
         public int Interval { get; set; }
         public double Acceleration { get; set; }
+
+        public int VehOriginLaneId { get; set; }
+        public int VehDestinationLaneId { get; set; }
+        public float InitialSpeed { get; set; }
     }
 }
