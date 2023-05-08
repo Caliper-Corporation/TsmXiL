@@ -26,8 +26,8 @@ namespace TsmXiL
                     return false;
                 }
 
-                var logFile = Path.Combine(Tsm.OutputFolder, "TsmXiL-log.txt");
-                var dataFile = Path.Combine(Tsm.OutputFolder, "TsmXiL-data.csv");
+                var logFile = Path.Combine(Tsm.OutputBaseFolder, "TsmXiL-log.txt");
+                var dataFile = Path.Combine(Tsm.OutputBaseFolder, "TsmXiL-data.csv");
                 Log = new Logger(logFile, dataFile);
                 Controller = new Controller(Tsm, Log, configFile);
                 Log.Info("Initiating TsmXiL Plugin...");
