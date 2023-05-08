@@ -143,7 +143,7 @@ namespace TsmXiL
         {
             try
             {
-                if (Math.Abs(time - 59700) < 0.1)
+                if (Math.Abs(time - Controller.Config.VehStartTime) < 0.1)
                 {
                     Controller.AddVehicle();
                 }

@@ -4,4 +4,5 @@ UpdateInterval: 1000
 VehOriginLaneId : -222
 VehDestinationLaneId : -360
 VehInitialSpeed : 35
-DefaultAcceleration: 0
+VehDefaultAcceleration: 0
+VehStartTime : 59700

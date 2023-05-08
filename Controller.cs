@@ -12,7 +12,7 @@ namespace TsmXiL
         private Logger Log { get; set; }
         public double UpdateIntervalInSeconds { get; set; }
 
-        private ConfigOptions _config;
+        public ConfigOptions Config;
         private TcpClient _client;
         private static BinaryReader _reader;
         private static NetworkStream _stream;
@@ -31,9 +31,9 @@ namespace TsmXiL
 
         public void Init()
         {
-            _config = Utils.GetConfigValues(_configFile, Log);
-            UpdateIntervalInSeconds = (double)_config.Interval / 1000;
-            _client = Utils.GetTcpClient(_config.ServerIp, _config.Port, Log);
+            Config = Utils.GetConfigValues(_configFile, Log);
+            UpdateIntervalInSeconds = (double)Config.Interval / 1000;
+            _client = Utils.GetTcpClient(Config.ServerIp, Config.Port, Log);
             _stream = _client?.GetStream();
             if (_stream != null)
             {
@@ -55,16 +55,17 @@ namespace TsmXiL
         public void AddVehicle()
         {
             var opts = new TsmAttributes();
-            opts.Set("Speed", _config.InitialSpeed);
+            opts.Set("Speed", Config.VehInitialSpeed);
+            //opts.Set("Departure Time", Config.VehStartTime);
             var ori = new STsmLocation
             {
                 type = TsmLocationType.LOCATION_LINK,
-                id = _config.VehOriginLaneId
+                id = Config.VehOriginLaneId
             };
             var des = new STsmLocation()
             {
                 type = TsmLocationType.LOCATION_LINK,
-                id = _config.VehDestinationLaneId
+                id = Config.VehDestinationLaneId
             };
             Vehicle = Tsm.Network.AddVehicle(ref ori, ref des, opts);
             if (Vehicle == null)
@@ -74,7 +75,7 @@ namespace TsmXiL
                 throw new Exception(msg);
             }
             Vehicle.Track(true, true);
-            Log.Info($"Added new vehicle on lane {_config.VehOriginLaneId} with id {Vehicle.id} and turned on tracking");
+            Log.Info($"Added new vehicle on lane {Config.VehOriginLaneId} with id {Vehicle.id} and turned on tracking");
             Tsm.Pause(true);
         }
 
@@ -88,8 +89,8 @@ namespace TsmXiL
             }
             else
             {
-                req.Acceleration = _config.Acceleration;
-                req.Speed = _config.InitialSpeed;
+                req.Acceleration = Config.VehAcceleration;
+                req.Speed = Config.VehInitialSpeed;
             }
 
             _dataLine += $"{req.Acceleration:F2},{req.Speed:F2},";
