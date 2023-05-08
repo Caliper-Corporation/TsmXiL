@@ -1,7 +1,4 @@
-﻿using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-
-namespace TsmXiL
+﻿namespace TsmXiL
 {
     public class Response
     {
