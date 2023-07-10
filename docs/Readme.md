@@ -2,12 +2,30 @@
 
 This is a plugin to model Vehicle-in-Loop in TransModeler traffic simulation. It is a class library (.dll) project.
 
+## Setup instructions
+
+### Prerequisites
+
+- Visual Studio 2019 or later or Visual Studio Code
+- .NET Framework 4.8
+- TransModeler 7.0 or later
+- A vehicle controller that can be connected to using TCP/IP
+
+### Build the plugin DLL
+
+- Clone this repository to your local machine
+  - git clone <https://github.com/Caliper-Corporation/TsmXiL.git>
+- Open the project file (TsmXiL.csproj) in Visual Studio or Visual Studio Code
+- Compile the project to generate the plugin dll (TsmXiL.dll)
+  - dotnet build .
+- Copy the plugin dll and related files to C:\temp\TsmXiL folder if they haven't been placed there by the build process
+  
 ## Load the plugin DLL in TransModeler
 
 The plugin dll is loaded in TransModeler using the TsmXiL.dbd resource. To load in TransModeler,
 
 - Go to Simulation > Options... menu item and in the Call Every Simulation section in the Macros tab specify -
-    1. Choose the TsmXiL.dbd file as UI Database by clicking on the "Choose" button
+    1. Choose the C:\temp\TsmXiL\resource\TsmXiL.dbd file as UI Database by clicking on the "Choose" button
     2. *InitializeTsmXiLPlugin* macro for "At Start"
     3. *DisconnectTsmXiLPlugin* macro for "At End"
 
@@ -23,7 +41,7 @@ The Manager.cs class connects this plugin with the TransModeler API and handles 
 
 The Controller.cs class has an Update() method which is called during each simulation timestep which can be set to a custom value as desired. The Update() method internally calls UpdateRealVehicle() method which sends speed and acceleration commands to the real vehicle controller and receives acceleration and speed in response. It then calls the UpdateSimulationVehicle() method which updates the speed and acceleration of the simulated vehicle.
 
-The Controller.cs class also has an AddVehicle() method which is called to add a new vehicle to the simulation. This method creates a new instance of the Vehicle class and adds it to the list of vehicles with the attributes specified in the configuration file (config.txt). 
+The Controller.cs class also has an AddVehicle() method which is called to add a new vehicle to the simulation. This method creates a new instance of the Vehicle class and adds it to the list of vehicles with the attributes specified in the configuration file (config.txt).
 
 ## Configuration
 
