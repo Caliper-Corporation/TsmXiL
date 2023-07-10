@@ -46,10 +46,10 @@ namespace TsmXiL
                         else if (key.Contains("port")) { config.Port = int.Parse(val); }
                         else if (key.Contains("interval")) { config.Interval = int.Parse(val); }
                         else if (key.Contains("acceleration")) { config.VehAcceleration = double.Parse(val); }
-                        else if (key.Contains("origin")) { config.VehOriginLaneId = int.Parse(val); }
-                        else if (key.Contains("destination")) { config.VehDestinationLaneId = int.Parse(val); }
+                        else if (key.Contains("origin")) { config.VehOriginLinkId = int.Parse(val); }
+                        else if (key.Contains("destination")) { config.VehDestinationLinkId = int.Parse(val); }
                         else if (key.Contains("speed")) { config.VehInitialSpeed = double.Parse(val); }
-                        else if (key.Contains("starttime")) { config.VehStartTime = int.Parse(val); }
+                        else if (key.Contains("departuretime")) { config.VehDepartureTime = int.Parse(val); }
                     }
                 }
             }
@@ -68,10 +68,10 @@ namespace TsmXiL
         public int Port { get; set; }
         public int Interval { get; set; }
 
-        public int VehOriginLaneId { get; set; }
-        public int VehDestinationLaneId { get; set; }
+        public int VehOriginLinkId { get; set; }
+        public int VehDestinationLinkId { get; set; }
         public double VehAcceleration { get; set; }
         public double VehInitialSpeed { get; set; }
-        public int VehStartTime { get; set; }
+        public int VehDepartureTime { get; set; }
     }
 }
