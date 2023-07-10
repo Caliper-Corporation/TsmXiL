@@ -1,8 +1,8 @@
 ﻿TcpAddress: 127.0.0.1
 TcpPort: 8080
 UpdateInterval: 1000
-VehOriginLaneId : -222
-VehDestinationLaneId : -360
-VehInitialSpeed : 35
+VehOriginLinkId : -222
+VehDestinationLinkId : -360
+VehInitialSpeed : 0
 VehDefaultAcceleration: 0
-VehStartTime : 59700
+VehDepartureTime : 59415

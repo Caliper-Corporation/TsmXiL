@@ -47,7 +47,7 @@ namespace TsmXiL
             {
                 Disconnect();
                 Log.Error($"An error occurred while initializing the TsmXiL plugin.\nError: {exception.Message}");
-                throw;
+                return false;
             }
         }
 
@@ -139,14 +139,11 @@ namespace TsmXiL
             Controller?.Init();
         }
 
+        //This method gets called at every simulation step
         private double OnSimulationAdvance(double time)
         {
             try
             {
-                if (Math.Abs(time - Controller.Config.VehStartTime) < 0.1)
-                {
-                    Controller.AddVehicle();
-                }
                 if (time >= NextTime)
                 {
                     NextTime = time + Controller.UpdateIntervalInSeconds;

@@ -8,38 +8,38 @@ namespace TsmXiL
 {
     public class Controller
     {
-        private ITsmApplication Tsm { get; set; }
-        private Logger Log { get; set; }
-        public double UpdateIntervalInSeconds { get; set; }
-
-        public ConfigOptions Config;
-        private TcpClient _client;
         private static BinaryReader _reader;
         private static NetworkStream _stream;
-        private string _simTime;
-        public ITsmVehicle Vehicle { get; set; }
         private readonly string _configFile;
-        private string _dataLine;
+        private TcpClient _client;
 
+        private ConfigOptions _config;
+        private string _dataLine;
+        private string _simTime;
+        private int _vehicleId;
+
+        private ITsmApplication Tsm { get; }
+        private Logger Log { get; }
+        public double UpdateIntervalInSeconds { get; private set; }
+        public ITsmVehicle Vehicle { get; private set; }
 
         public Controller(ITsmApplication tsm, Logger logger, string configFile)
         {
             Tsm = tsm;
             Log = logger;
             _configFile = configFile;
+            _vehicleId = 0;
         }
-
+        
         public void Init()
         {
-            Config = Utils.GetConfigValues(_configFile, Log);
-            UpdateIntervalInSeconds = (double)Config.Interval / 1000;
-            _client = Utils.GetTcpClient(Config.ServerIp, Config.Port, Log);
+            _config = Utils.GetConfigValues(_configFile, Log);
+            UpdateIntervalInSeconds = (double)_config.Interval / 1000;
+            _client = Utils.GetTcpClient(_config.ServerIp, _config.Port, Log);
             _stream = _client?.GetStream();
-            if (_stream != null)
-            {
-                _reader = new BinaryReader(_stream, Encoding.Default, true);
-            }
+            if (_stream != null) _reader = new BinaryReader(_stream, Encoding.Default, true);
             Log.Data("Sim Time, Request Acceleration, Request Speed, Response Acceleration, Response Speed");
+            AddVehicle();
         }
 
         public void Update(double time)
@@ -47,51 +47,58 @@ namespace TsmXiL
             _simTime = Tsm?.TimeToString(time);
             _simTime = string.IsNullOrEmpty(_simTime) ? DateTime.Now.ToString("G") : _simTime;
             _dataLine = $"{_simTime},";
+
+            if (Vehicle == null)
+            {
+                Vehicle = Tsm?.Network?.Vehicle[_vehicleId];
+                if (Vehicle != null)
+                {
+                    Vehicle.Track(true, true);
+                    Tsm?.Pause(true);
+                }
+            }
+
             UpdateRealVehicle();
             UpdateSimulationVehicle();
             if (Vehicle != null) Log.Data(_dataLine);
         }
 
-        public void AddVehicle()
+        private void AddVehicle()
         {
             var opts = new TsmAttributes();
-            opts.Set("Speed", Config.VehInitialSpeed);
-            //opts.Set("Departure Time", Config.VehStartTime);
+            opts.Set("Speed", _config.VehInitialSpeed);
+            opts.Set("Departure Time", _config.VehDepartureTime);
+            opts.Set("Stop on Arrival", true);
             var ori = new STsmLocation
             {
                 type = TsmLocationType.LOCATION_LINK,
-                id = Config.VehOriginLaneId
+                id = _config.VehOriginLinkId
             };
-            var des = new STsmLocation()
+            var des = new STsmLocation
             {
                 type = TsmLocationType.LOCATION_LINK,
-                id = Config.VehDestinationLaneId
+                id = _config.VehDestinationLinkId
             };
-            Vehicle = Tsm.Network.AddVehicle(ref ori, ref des, opts);
-            if (Vehicle == null)
+            _vehicleId = Tsm.Network.AddVehicle(ref ori, ref des, opts);
+            if (_vehicleId == 0)
             {
                 var msg = "Unable to add vehicle to network.";
                 Log.Error(msg);
                 throw new Exception(msg);
             }
-            Vehicle.Track(true, true);
-            Log.Info($"Added new vehicle on lane {Config.VehOriginLaneId} with id {Vehicle.id} and turned on tracking");
-            Tsm.Pause(true);
+
+            Log.Info(
+                $"Added new vehicle on link {_config.VehOriginLinkId} with id {_vehicleId} and turned on tracking");
         }
 
         private void UpdateRealVehicle()
         {
-            var req = new Request();
-            if (Vehicle != null && Vehicle.Leader != null)
+            if (Vehicle == null) return;
+            var req = new Request
             {
-                req.Acceleration = Vehicle.Leader.Acceleration;
-                req.Speed = Vehicle.Leader.Speed;
-            }
-            else
-            {
-                req.Acceleration = Config.VehAcceleration;
-                req.Speed = Config.VehInitialSpeed;
-            }
+                Acceleration = Vehicle.Acceleration,
+                Speed = Vehicle.Speed
+            };
 
             _dataLine += $"{req.Acceleration:F2},{req.Speed:F2},";
             var bytes = req.GetByteArray();
